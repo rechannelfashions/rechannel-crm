@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ReChannel Fashion | Luxury CRM</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        dark: { 950: '#050505', 900: '#0a0a0a', 800: '#141414', 700: '#1f1f1f' },
+                        gold: { 400: '#d4af37', 500: '#c5a059', 600: '#aa823d' }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-dark-950 text-white font-sans antialiased min-h-screen flex flex-col">
+
+    {% if not session.get('user_id') %}
+    <!-- LOGIN SCREEN -->
+    <div class="flex items-center justify-center flex-1 p-4">
+        <div class="bg-dark-800 border border-gold-400/40 p-8 rounded-xl w-full max-w-md space-y-6 shadow-2xl">
+            <div class="text-center space-y-3">
+                <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gold-500/10 border border-gold-400/30 mb-2">
+                    <i class="fas fa-crown text-gold-400 text-2xl"></i>
+                </div>
+                <h1 class="text-2xl font-bold tracking-widest text-gold-400 uppercase">ReChannel</h1>
+                <p class="text-xs text-gray-300 uppercase tracking-widest">Luxury Menswear CRM</p>
+                <p class="text-[10px] text-gold-400/80">Permanent Login: rcfpavika / rcfaarya</p>
+            </div>
+            {% if error %}
+            <div class="bg-red-500/20 border border-red-500 text-red-300 p-3 rounded text-xs text-center">{{ error }}</div>
+            {% endif %}
+            <form action="/login" method="POST" class="space-y-4">
+                <div>
+                    <label class="block text-xs uppercase tracking-wider text-gray-300 mb-1">Username</label>
+                    <input type="text" name="username" class="w-full p-3 bg-dark-700 border border-gray-700 rounded text-white text-sm focus:border-gold-400 focus:outline-none" required>
+                </div>
+                <div>
+                    <label class="block text-xs uppercase tracking-wider text-gray-300 mb-1">Password</label>
+                    <input type="password" name="password" class="w-full p-3 bg-dark-700 border border-gray-700 rounded text-white text-sm focus:border-gold-400 focus:outline-none" required>
+                </div>
+                <button type="submit" class="w-full py-3 bg-gold-500 text-dark-950 font-bold rounded uppercase tracking-wider text-sm hover:bg-gold-400 transition shadow-lg">Login</button>
+            </form>
+        </div>
+    </div>
+    {% else %}
+    <!-- DASHBOARD LAYOUT -->
+    <div class="flex flex-1">
+        <!-- Sidebar Navigation -->
+        <aside class="w-64 bg-dark-900 border-r border-gray-800 flex flex-col justify-between hidden md:flex">
+            <div class="p-6 space-y-6">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 rounded-lg bg-gold-500/10 border border-gold-400/40 flex items-center justify-center text-gold-400">
+                        <i class="fas fa-crown text-lg"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-gold-400 font-bold tracking-widest uppercase text-sm">ReChannel</h2>
+                        <p class="text-[10px] text-gray-400 uppercase tracking-wider">Luxury CRM</p>
+                    </div>
+                </div>
+                <nav class="space-y-1 text-xs">
+                    <button onclick="switchTab('dashboard')" id="nav-dashboard" class="w-full flex items-center space-x-3 px-4 py-3 rounded text-left transition hover:bg-dark-800 text-gold-400 bg-dark-800/80 font-semibold"><i class="fas fa-chart-line w-5"></i><span>Dashboard</span></button>
+                    <button onclick="switchTab('appointments')" id="nav-appointments" class="w-full flex items-center space-x-3 px-4 py-3 rounded text-left transition hover:bg-dark-800 text-white"><i class="fas fa-calendar-alt w-5"></i><span>Appointments</span></button>
+                    <button onclick="switchTab('bookings')" id="nav-bookings" class="w-full flex items-center space-x-3 px-4 py-3 rounded text-left transition hover:bg-dark-800 text-white"><i class="fas fa-shopping-bag w-5"></i><span>Order Bookings</span></button>
+                    <button onclick="switchTab('trials')" id="nav-trials" class="w-full flex items-center space-x-3 px-4 py-3 rounded text-left transition hover:bg-dark-800 text-white"><i class="fas fa-tshirt w-5"></i><span>Trials & Delivery</span></button>
+                </nav>
+            </div>
+            <div class="p-4 border-t border-gray-800 flex items-center justify-between text-xs">
+                <span class="text-gold-400 font-medium">{{ session.get('username') }}</span>
+                <a href="/logout" class="text-red-400 hover:text-red-300"><i class="fas fa-sign-out-alt"></i> Logout</a>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="flex-1 flex flex-col bg-dark-950 overflow-y-auto p-6 space-y-6">
+            
+            <!-- TAB 1: DASHBOARD -->
+            <div id="tab-dashboard" class="tab-content space-y-6">
+                <h1 class="text-xl font-bold text-gold-400 tracking-wide uppercase">Dashboard Overview</h1>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="bg-dark-800 border border-gold-400/20 p-4 rounded-lg shadow">
+                        <p class="text-xs text-gray-400 uppercase">Total Bookings</p>
+                        <h3 class="text-2xl font-bold text-gold-400 mt-1">{{ bookings | length }}</h3>
+                    </div>
+                    <div class="bg-dark-800 border border-gold-400/20 p-4 rounded-lg shadow">
+                        <p class="text-xs text-gray-400 uppercase">Pending Trials</p>
+                        <h3 class="text-2xl font-bold text-gold-400 mt-1">{{ trials | length }}</h3>
+                    </div>
+                    <div class="bg-dark-800 border border-gold-400/20 p-4 rounded-lg shadow">
+                        <p class="text-xs text-gray-400 uppercase">Active Appointments</p>
+                        <h3 class="text-2xl font-bold text-gold-400 mt-1">{{ appointments | length }}</h3>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 2: APPOINTMENTS SECTION -->
+            <div id="tab-appointments" class="tab-content space-y-4 hidden">
+                <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+                    <h1 class="text-xl font-bold text-gold-400 uppercase">Appointments</h1>
+                    <div class="flex items-center space-x-2 w-full md:w-auto">
+                        <div class="relative flex-1 md:w-72">
+                            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400"><i class="fas fa-search"></i></span>
+                            <input type="text" id="search-appointments" onkeyup="searchTable('appointments')" placeholder="Search customer or phone..." class="w-full pl-9 pr-4 py-2 bg-dark-800 border border-gold-400/30 rounded text-xs text-white focus:outline-none focus:border-gold-400">
+                        </div>
+                        <a href="/export/appointments" class="px-3 py-2 bg-dark-800 border border-gold-400/40 text-gold-400 font-bold rounded text-xs uppercase hover:bg-dark-700 flex items-center space-x-1 whitespace-nowrap"><i class="fas fa-file-excel"></i> <span>Export</span></a>
+                        <button onclick="openModal('modal-appointment')" class="px-4 py-2 bg-gold-500 text-dark-950 font-bold rounded text-xs uppercase hover:bg-gold-400 shadow whitespace-nowrap">+ New</button>
+                    </div>
+                </div>
+                <div class="bg-dark-800 border border-gray-800 rounded-lg overflow-x-auto shadow">
+                    <table id="table-appointments" class="w-full text-left text-xs text-white">
+                        <thead class="bg-dark-700 text-gold-400 uppercase">
+                            <tr>
+                                <th class="p-3">Customer</th>
+                                <th class="p-3">Phone</th>
+                                <th class="p-3">Date</th>
+                                <th class="p-3">Time</th>
+                                <th class="p-3">Manager</th>
+                                <th class="p-3">Reference</th>
+                                <th class="p-3">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-800">
+                            {% for a in appointments %}
+                            <tr>
+                                <td class="p-3 font-medium text-white">{{ a.customer_name }}</td>
+                                <td class="p-3">{{ a.customer_phone }}</td>
+                                <td class="p-3">{{ a.appointment_date }}</td>
+                                <td class="p-3">{{ a.appointment_time }}</td>
+                                <td class="p-3">{{ a.order_manager }}</td>
+                                <td class="p-3">{{ a.reference }}</td>
+                                <td class="p-3 space-x-3">
+                                    <button onclick='editAppointment({{ a | tojson }})' class="text-gold-400 hover:text-gold-300"><i class="fas fa-edit"></i></button>
+                                    <form action="/api/appointments/delete/{{ a.id }}" method="POST" class="inline" onsubmit="return confirm('Delete appointment?');">
+                                        <button type="submit" class="text-red-400 hover:text-red-300"><i class="fas fa-trash"></i></button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="7" class="p-4 text-center text-gray-400">No appointments found.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- TAB 3: BOOKING SECTION -->
+            <div id="tab-bookings" class="tab-content space-y-4 hidden">
+                <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+                    <h1 class="text-xl font-bold text-gold-400 uppercase">Order Bookings</h1>
+                    <div class="flex items-center space-x-2 w-full md:w-auto">
+                        <div class="relative flex-1 md:w-80">
+                            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400"><i class="fas fa-search"></i></span>
+                            <input type="text" id="search-bookings" onkeyup="searchTable('bookings')" placeholder="Search by Order No or Customer Name..." class="w-full pl-9 pr-4 py-2 bg-dark-800 border border-gold-400/30 rounded text-xs text-white focus:outline-none focus:border-gold-400">
+                        </div>
+                        <a href="/export/bookings" class="px-3 py-2 bg-dark-800 border border-gold-400/40 text-gold-400 font-bold rounded text-xs uppercase hover:bg-dark-700 flex items-center space-x-1 whitespace-nowrap"><i class="fas fa-file-excel"></i> <span>Export</span></a>
+                        <button onclick="openModal('modal-booking')" class="px-4 py-2 bg-gold-500 text-dark-950 font-bold rounded text-xs uppercase hover:bg-gold-400 shadow whitespace-nowrap">+ New</button>
+                    </div>
+                </div>
+                <div class="bg-dark-800 border border-gray-800 rounded-lg overflow-x-auto shadow">
+                    <table id="table-bookings" class="w-full text-left text-xs text-white">
+                        <thead class="bg-dark-700 text-gold-400 uppercase">
+                            <tr>
+                                <th class="p-3">Order No</th>
+                                <th class="p-3">Date</th>
+                                <th class="p-3">Customer</th>
+                                <th class="p-3">Manager</th>
+                                <th class="p-3">Trial Date</th>
+                                <th class="p-3">Phone</th>
+                                <th class="p-3">Status / Outfits</th>
+                                <th class="p-3">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-800">
+                            {% for b in bookings %}
+                            <tr>
+                                <td class="p-3 font-medium text-white">{{ b.order_no }}</td>
+                                <td class="p-3">{{ b.booking_date }}</td>
+                                <td class="p-3 text-white">{{ b.customer_name }}</td>
+                                <td class="p-3">{{ b.order_manager }}</td>
+                                <td class="p-3">{{ b.trial_date }}</td>
+                                <td class="p-3">{{ b.customer_phone }}</td>
+                                <td class="p-3 text-[10px] text-gold-400">
+                                    {% if b.sw %}Shawarvani {% endif %}
+                                    {% if b.nw %}Nawabi {% endif %}
+                                    {% if b.jp %}Jodpuri {% endif %}
+                                    {% if b.bomber %}Bomber {% endif %}
+                                    {% if b.suit %}Suit {% endif %}
+                                    {% if b.bundi %}Bundi {% endif %}
+                                    {% if b.iw %}Indowesten {% endif %}
+                                    {% if b.kurta %}Kurta {% endif %}
+                                </td>
+                                <td class="p-3 space-x-2 whitespace-nowrap">
+                                    <button onclick='editBooking({{ b | tojson }})' class="text-gold-400 hover:text-gold-300"><i class="fas fa-edit"></i></button>
+                                    <form action="/api/bookings/delete/{{ b.id }}" method="POST" class="inline" onsubmit="return confirm('Delete booking?');">
+                                        <button type="submit" class="text-red-400 hover:text-red-300"><i class="fas fa-trash"></i></button>
+                                    </form>
+                                    <a href="https://wa.me/{{ b.customer_phone }}?text=Hello%20{{ b.customer_name }},%20your%20order%20%23{{ b.order_no }}%20booking%20is%20confirmed%20at%20ReChannel%20Fashion." target="_blank" class="text-green-400 hover:text-green-300"><i class="fab fa-whatsapp"></i> WhatsApp</a>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="8" class="p-4 text-center text-gray-400">No bookings found.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- TAB 4: TRIALS & DELIVERY SECTION -->
+            <div id="tab-trials" class="tab-content space-y-4 hidden">
+                <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+                    <h1 class="text-xl font-bold text-gold-400 uppercase">Trials & Delivery</h1>
+                    <div class="flex items-center space-x-2 w-full md:w-auto">
+                        <div class="relative flex-1 md:w-80">
+                            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400"><i class="fas fa-search"></i></span>
+                            <input type="text" id="search-trials" onkeyup="searchTable('trials')" placeholder="Search by Order No or Customer Name..." class="w-full pl-9 pr-4 py-2 bg-dark-800 border border-gold-400/30 rounded text-xs text-white focus:outline-none focus:border-gold-400">
+                        </div>
+                        <a href="/export/trials" class="px-3 py-2 bg-dark-800 border border-gold-400/40 text-gold-400 font-bold rounded text-xs uppercase hover:bg-dark-700 flex items-center space-x-1 whitespace-nowrap"><i class="fas fa-file-excel"></i> <span>Export</span></a>
+                        <button onclick="openModal('modal-trial')" class="px-4 py-2 bg-gold-500 text-dark-950 font-bold rounded text-xs uppercase hover:bg-gold-400 shadow whitespace-nowrap">+ New</button>
+                    </div>
+                </div>
+                <div class="bg-dark-800 border border-gray-800 rounded-lg overflow-x-auto shadow">
+                    <table id="table-trials" class="w-full text-left text-xs text-white">
+                        <thead class="bg-dark-700 text-gold-400 uppercase">
+                            <tr>
+                                <th class="p-3">Order No</th>
+                                <th class="p-3">Date</th>
+                                <th class="p-3">Customer</th>
+                                <th class="p-3">Phone</th>
+                                <th class="p-3">Trial Date</th>
+                                <th class="p-3">Status</th>
+                                <th class="p-3">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-800">
+                            {% for t in trials %}
+                            <tr>
+                                <td class="p-3 font-medium text-white">{{ t.order_no }}</td>
+                                <td class="p-3">{{ t.trial_date }}</td>
+                                <td class="p-3 text-white">{{ t.customer_name }}</td>
+                                <td class="p-3">{{ t.customer_phone }}</td>
+                                <td class="p-3">{{ t.trial_date }}</td>
+                                <td class="p-3">
+                                    {% if t.delivery_done %}<span class="text-green-400 font-bold">Delivered</span>
+                                    {% elif t.second_trial_done %}<span class="text-blue-400">2nd Trial Done</span>
+                                    {% elif t.first_trial_done %}<span class="text-yellow-400">1st Trial Done</span>
+                                    {% else %}<span class="text-gray-400">Pending</span>{% endif %}
+                                </td>
+                                <td class="p-3 space-x-2 whitespace-nowrap">
+                                    <button onclick='editTrial({{ t | tojson }})' class="text-gold-400 hover:text-gold-300"><i class="fas fa-edit"></i></button>
+                                    <form action="/api/trials/delete/{{ t.id }}" method="POST" class="inline" onsubmit="return confirm('Delete trial record?');">
+                                        <button type="submit" class="text-red-400 hover:text-red-300"><i class="fas fa-trash"></i></button>
+                                    </form>
+                                    <a href="https://wa.me/{{ t.customer_phone }}?text=Hello%20{{ t.customer_name }},%20this%20is%20a%20reminder%20for%20your%20trial%20on%20{{ t.trial_date }}%20at%20ReChannel%20Fashion." target="_blank" class="text-green-400 hover:text-green-300"><i class="fab fa-whatsapp"></i> WhatsApp</a>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="7" class="p-4 text-center text-gray-400">No trial records found.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- MODALS -->
+    <!-- APPOINTMENT MODAL -->
+    <div id="modal-appointment" class="fixed inset-0 bg-black/80 hidden items-center justify-center z-50 p-4">
+        <div class="bg-dark-800 border border-gold-400/30 rounded-lg max-w-md w-full p-6 space-y-4 text-white">
+            <div class="flex justify-between items-center border-b border-gray-800 pb-2">
+                <h3 id="app-modal-title" class="text-gold-400 font-bold uppercase text-sm">New Appointment</h3>
+                <button onclick="closeModal('modal-appointment')" class="text-gray-400 hover:text-white text-lg">&times;</button>
+            </div>
+            <form action="/api/appointments" method="POST" class="space-y-3 text-xs">
+                <input type="hidden" name="id" id="app-id">
+                <div><label class="block mb-1 text-gray-300">Date</label><input type="date" name="appointment_date" id="app-date" class="w-full p-2 bg-dark-700 border border-gray-700 rounded text-white" required></div>
+                <div><label class="block mb-1 text-gray-300">Customer Name</label><input type="text" name="customer_name" id="app-name" class="w-full p-2 bg-dark-700 border border-gray-700 rounded text-white" required></div>
+                <div><label class="block mb-1 text-gray-300">Number / Phone</label><input type="text" name="customer_phone" id="app-phone" class="w-full p-2 bg-dark-700 border border-gray-700 rounded text-white" required></div>
+                <div><label class="block mb-1 text-gray-300">Manager Name</label><input type="text" name="order_manager" id="app-manager" class="w-full p-2 bg-dark-700 border border-gray-700 rounded text-white"></div>
+                <div><label class="block mb-1 text-gray-300">Reference</label><input type="text" name="reference" id="app-reference" class="w-full p-2 bg-dark-700 border border-gray-700 rounded text-white"></div>
+                <input type="hidden" name="appointment_time" id="app-time" value="10:00">
+                <button type="submit" class="w-full py-2 bg-gold-500 text-dark-950 font-bold rounded uppercase mt-2 hover:bg-gold-400">Save Appointment</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- BOOKING MODAL -->
+    <div id="modal-booking" class="fixed inset-0 bg-black/80 hidden items-center justify-center z-50 p-4">
+        <div class="bg-dark-800 border border-gold-400/30 rounded-lg max-w-lg w-full p-6 space-y-4 max-h-[90vh] overflow-y-auto text-white">
+            <div class="flex justify-between items-center border-b border-gray-800 pb-2">
+                <h3 id="book-modal-title" class="text-gold-400 font-bold uppercase text-sm">Order Booking Form</h3>
+                <button onclick="closeModal('modal-booking')" class="text-gray-400 hover:text-white text-lg">&times;</button>
+            </div>
+            <form action="/api/bookings" method="POST" class="space-y-3 text-xs">
+                <input type="hidden" name="id" id="book-id">
+                <div class="grid grid-cols-2 gap-2">
+                    <div><label class="block mb-1 text-gray-300">Order No</label><input type="text" name="order_no" id="book-order-no" class="w-full p-2 bg-dark-700 border border-gray-700 rounded text-white" required></div>
+                    <div><label class="block mb-1 text-gray-300">Date</label><input type="date" name="booking_date" id="book-date" class="w-full p-2 bg-dark-700 border border-gray-700 rounded text-white" required></div>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div><label class="block mb-1 text-gray-300">Customer Name</label><input type="text" name="customer_name" id="book-name" class="w-full p-2 bg-dark-700 border border-gray-700 rounded text-white" required></div>
+                    <div><label class="block mb-1 text-gray-300">Manager Name</label><input type="text" name="order_manager" id="book-manager" class="w-full p-2 bg-dark-700 border border-gray-700 rounded text-white"></div>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div><label class="block mb-1 text-gray-300">Trial Date</label><input type="date" name="trial_date" id="book-trial-date" class="w-full p-2 bg-dark-700 border border-gray-700 rounded text-white"></div>
+                    <div><label class="block mb-1 text-gray-300">Phone No</label><input type="text" name="customer_phone" id="book-phone" class="w-full p-2 bg-dark-700 border border-gray-700 rounded text-white" required></div>
+                </div>
+                <div><label class="block mb-1 text-gold-400 font-semibold">Select Outfits (Checkboxes):</label></div>
+                <div class="grid grid-cols-3 gap-2 bg-dark-700/50 p-3 rounded border border-gray-700">
+                    <label class="flex items-center space-x-2 text-gray-200"><input type="checkbox" name="sw" id="book-sw" class="accent-gold-500"> <span>Shawarvani</span></label>
+                    <label class="flex items-center space-x-2 text-gray-200"><input type="checkbox" name="nw" id="book-nw" class="accent-gold-500"> <span>Nawabi</span></label>
+                    <label class="flex items-center space-x-2 text-gray-200"><input type="checkbox" name="jp" id="book-jp" class="accent-gold-500"> <span>Jodpuri</span></label>
+                    <label class="flex items-center space-x-2 text-gray-200"><input type="checkbox" name="bomber" id="book-bomber" class="accent-gold-500"> <span>Bomber</span></label>
+                    <label class="flex items-center space-x-2 text-gray-200"><input type="checkbox" name="suit" id="book-suit" class="accent-gold-500"> <span>Suit</span></label>
+                    <label class="flex items-center space-x-2 text-gray-200"><input type="checkbox" name="bundi" id="book-bundi" class="accent-gold-500"> <span>Bundi</span></label>
+                    <label class="flex items-center space-x-2 text-gray-200"><input type="checkbox" name="iw" id="book-iw" class="accent-gold-500"> <span>Indowesten</span></label>
+                    <label class="flex items-center space-x-2 text-gray-200"><input type="checkbox" name="kurta" id="book-kurta" class="accent-gold-500"> <span>Kurta</span></label>
+                </div>
+                <button type="submit" class="w-full py-2 bg-gold-500 text-dark-950 font-bold rounded uppercase mt-2 hover:bg-gold-400">Save Booking</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- TRIAL MODAL -->
+    <div id="modal-trial" class="fixed inset-0 bg-black/80 hidden items-center justify-center z-50 p-4">
+        <div class="bg-dark-800 border border-gold-400/30 rounded-lg max-w-lg w-full p-6 space-y-4 max-h-[90vh] overflow-y-auto text-white">
+            <div class="flex justify-between items-center border-b border-gray-800 pb-2">
+                <h3 id="trial-modal-title" class="text-gold-400 font-bold uppercase text-sm">Trial & Delivery Form</h3>
+                <button onclick="closeModal('modal-trial')" class="text-gray-400 hover:text-white text-lg">&times;</button>
+            </div>
+            <form action="/api/trials" method="POST" class="space-y-3 text-xs">
+                <input type="hidden" name="id" id="trial-id">
+                <div class="grid grid-cols-2 gap-2">
+                    <div><label class="block mb-1 text-gray-300">Order No</label><input type="text" name="order_no" id="trial-order-no" class="w-full p-2 bg-dark-700 border border-gray-700 rounded text-white" required></div>
+                    <div><label class="block mb-1 text-gray-300">Date</label><input type="date" name="trial_date" id="trial-date" class="w-full p-2 bg-dark-700 border border-gray-700 rounded text-white" required></div>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div><label class="block mb-1 text-gray-300">Customer Name</label><input type="text" name="customer_name" id="trial-name" class="w-full p-2 bg-dark-700 border border-gray-700 rounded text-white" required></div>
+                    <div><label class="block mb-1 text-gray-300">Phone Number</label><input type="text" name="customer_phone" id="trial-phone" class="w-full p-2 bg-dark-700 border border-gray-700 rounded text-white" required></div>
+                </div>
+                <div><label class="block mb-1 text-gray-300">Trial Date</label><input type="date" name="trial_date" id="trial-date-field" class="w-full p-2 bg-dark-700 border border-gray-700 rounded text-white"></div>
+                
+                <div class="grid grid-cols-3 gap-2 pt-2 border-t border-gray-700">
+                    <label class="flex items-center space-x-1 text-gray-200"><input type="checkbox" name="first_trial_done" id="trial-f-done" class="accent-gold-500"> <span>1st Trial</span></label>
+                    <label class="flex items-center space-x-1 text-gray-200"><input type="checkbox" name="second_trial_done" id="trial-s-done" class="accent-gold-500"> <span>2nd Trial</span></label>
+                    <label class="flex items-center space-x-1 text-gray-200"><input type="checkbox" name="delivery_done" id="trial-d-done" class="accent-gold-500"> <span>Delivery Done</span></label>
+                </div>
+                <button type="submit" class="w-full py-2 bg-gold-500 text-dark-950 font-bold rounded uppercase mt-2 hover:bg-gold-400">Save Trial Entry</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.getElementById('tab-' + tabId).classList.remove('hidden');
+            
+            document.querySelectorAll('aside nav button').forEach(btn => {
+                btn.classList.remove('text-gold-400', 'bg-dark-800/80', 'font-semibold');
+                btn.classList.add('text-white');
+            });
+            const activeBtn = document.getElementById('nav-' + tabId);
+            if(activeBtn) {
+                activeBtn.classList.add('text-gold-400', 'bg-dark-800/80', 'font-semibold');
+                activeBtn.classList.remove('text-white');
+            }
+        }
+        function openModal(modalId) {
+            document.getElementById(modalId).classList.remove('hidden');
+            document.getElementById(modalId).classList.add('flex');
+        }
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('flex');
+            document.getElementById(modalId).classList.add('hidden');
+        }
+
+        // INSTANT SEARCH FUNCTION (Order No / Customer Name)
+        function searchTable(section) {
+            const input = document.getElementById('search-' + section);
+            const filter = input.value.toLowerCase();
+            const table = document.getElementById('table-' + section);
+            const tr = table.getElementsByTagName('tr');
+
+            for (let i = 1; i < tr.length; i++) {
+                let found = false;
+                const td = tr[i].getElementsByTagName('td');
+                for (let j = 0; j < td.length; j++) {
+                    if (td[j]) {
+                        if (td[j].innerHTML.toLowerCase().indexOf(filter) > -1) {
+                            found = true;
+                            break;
+                        }
+                    }
+                }
+                tr[i].style.display = found ? "" : "none";
+            }
+        }
+
+        // EDIT POPULATION HELPERS
+        function editAppointment(data) {
+            document.getElementById('app-id').value = data.id || '';
+            document.getElementById('app-date').value = data.appointment_date || '';
+            document.getElementById('app-name').value = data.customer_name || '';
+            document.getElementById('app-phone').value = data.customer_phone || '';
+            document.getElementById('app-manager').value = data.order_manager || '';
+            document.getElementById('app-reference').value = data.reference || '';
+            document.getElementById('app-modal-title').innerText = 'Edit Appointment';
+            openModal('modal-appointment');
+        }
+
+        function editBooking(data) {
+            document.getElementById('book-id').value = data.id || '';
+            document.getElementById('book-order-no').value = data.order_no || '';
+            document.getElementById('book-date').value = data.booking_date || '';
+            document.getElementById('book-name').value = data.customer_name || '';
+            document.getElementById('book-manager').value = data.order_manager || '';
+            document.getElementById('book-trial-date').value = data.trial_date || '';
+            document.getElementById('book-phone').value = data.customer_phone || '';
+            
+            ['sw', 'nw', 'jp', 'bomber', 'suit', 'bundi', 'iw', 'kurta'].forEach(item => {
+                const el = document.getElementById('book-' + item);
+                if(el) el.checked = !!data[item];
+            });
+            document.getElementById('book-modal-title').innerText = 'Edit Order Booking';
+            openModal('modal-booking');
+        }
+
+        function editTrial(data) {
+            document.getElementById('trial-id').value = data.id || '';
+            document.getElementById('trial-order-no').value = data.order_no || '';
+            document.getElementById('trial-date').value = data.trial_date || '';
+            document.getElementById('trial-name').value = data.customer_name || '';
+            document.getElementById('trial-phone').value = data.customer_phone || '';
+            document.getElementById('trial-date-field').value = data.trial_date || '';
+            
+            document.getElementById('trial-f-done').checked = !!data.first_trial_done;
+            document.getElementById('trial-s-done').checked = !!data.second_trial_done;
+            document.getElementById('trial-d-done').checked = !!data.delivery_done;
+            document.getElementById('trial-modal-title').innerText = 'Edit Trial Entry';
+            openModal('modal-trial');
+        }
+    </script>
+    {% endif %}
+</body>
+</html>
